@@ -39,6 +39,30 @@ def upload_file():
         </form>
     ''')
 
+@app.route("/list")
+def list_files():
+    account_url = "https://<your-storage-account>.blob.core.windows.net"
+    container_name = "<your-container>"
+
+    blob_service_client = BlobServiceClient(account_url=account_url, credential=DefaultAzureCredential())
+    container_client = blob_service_client.get_container_client(container_name)
+
+    files = [blob.name for blob in container_client.list_blobs()]
+    return {"files": files}
+
+@app.route("/delete", methods=["POST"])
+def delete_file():
+    blob_name = request.json.get("filename")
+    if not blob_name:
+        return jsonify({"error": "filename is required"}), 400
+
+    try:
+        blob_client = container_client.get_blob_client(blob_name)
+        blob_client.delete_blob()
+        return jsonify({"message": f"{blob_name} deleted successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  
     app.run(host="0.0.0.0", port=port, debug=True)
