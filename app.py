@@ -11,9 +11,13 @@ KEY_VAULT_URL = "https://keyvault-wayver.vault.azure.net"  # Replace with your K
 SECRET_NAME = "StorageConnStr"  # The secret name in Key Vault
 
 # Authenticate with Managed Identity
-credential = DefaultAzureCredential()
-secret_client = SecretClient(vault_url=KEY_VAULT_URL, credential=credential)
-conn_str = secret_client.get_secret(SECRET_NAME).value
+try:
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=KEY_VAULT_URL, credential=credential)
+    conn_str = secret_client.get_secret(SECRET_NAME).value
+except Exception as e:
+    print("Failed to get secret:", e)
+    conn_str = None
 
 # Blob storage client
 blob_service_client = BlobServiceClient.from_connection_string(conn_str)
@@ -37,4 +41,4 @@ def upload_file():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
